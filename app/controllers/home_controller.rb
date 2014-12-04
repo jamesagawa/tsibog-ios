@@ -10,17 +10,20 @@ class HomeViewController < UIViewController
   end
 
   def searchStore
-    animateShowAnswer "Restaurant name goes here..."
+    BubbleWrap::HTTP.get("http://localhost:3000/companies.json") do |response|
+      result_data = BubbleWrap::JSON.parse(response.body.to_str)
+      animateShowAnswer result_data
+    end
   end
 
-  def animateShowAnswer(answer)
+  def animateShowAnswer(answer_data)
     UIView.animateWithDuration(1.0,
       animations:lambda {
         @label.alpha = 0
         @label.transform = CGAffineTransformMakeScale(0.1, 0.1)
       },
       completion:lambda { |finished|
-        @label.text = answer
+        @label.text = answer_data["name"]
         UIView.animateWithDuration(1.0,
           animations:lambda {
             @label.alpha = 1
