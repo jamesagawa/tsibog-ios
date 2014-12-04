@@ -6,32 +6,25 @@ class HomeViewController < UIViewController
     view.backgroundColor = UIColor.whiteColor
     view.userInteractionEnabled = true
     @button = showSearchButton
-    @label = showResultLabel
+    @suggestion = add_suggestion_area
   end
 
   def searchStore
+    @suggestion.animateHideAnswer
     BubbleWrap::HTTP.get("http://localhost:3000/companies.json") do |response|
       result_data = BubbleWrap::JSON.parse(response.body.to_str)
-      animateShowAnswer result_data
+      update_suggestion_area( Restaurant.new(result_data) )
     end
   end
 
-  def animateShowAnswer(answer_data)
-    UIView.animateWithDuration(1.0,
-      animations:lambda {
-        @label.alpha = 0
-        @label.transform = CGAffineTransformMakeScale(0.1, 0.1)
-      },
-      completion:lambda { |finished|
-        @label.text = answer_data["name"]
-        UIView.animateWithDuration(1.0,
-          animations:lambda {
-            @label.alpha = 1
-            @label.transform = CGAffineTransformIdentity
-          }
-        )
-      }
-    )
+  def add_suggestion_area
+    suggestion = SuggestionView.new
+    view.addSubview suggestion.view
+    suggestion
+  end
+
+  def update_suggestion_area(restaurant)
+    @suggestion.updateRestaurant(restaurant)
   end
 
   def showSearchButton
@@ -49,18 +42,6 @@ class HomeViewController < UIViewController
                  forControlEvents: UIControlEventTouchUpInside)
     view.addSubview button
     button
-  end
-
-  def showResultLabel
-    label = UILabel.alloc.initWithFrame([[10, 150], [screen_width - 20, 50]])
-    label.backgroundColor = UIColor.clearColor
-    label.text = ""
-    label.font = UIFont.boldSystemFontOfSize(15)
-    label.textColor = UIColor.redColor
-    label.textAlignment = UITextAlignmentCenter
-
-    view.addSubview label
-    label
   end
 
   def screen_width
